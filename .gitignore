@@ -1,0 +1,8 @@
+*.pyc
+venv
+results
+images
+/*.files
+.idea
+*.psx
+.DS_Store
