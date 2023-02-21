@@ -48,6 +48,7 @@ def export_results(chunk, args: argparse.Namespace) -> None:
 def main(args: argparse.Namespace) -> None:
     doc = Metashape.Document()
     doc.save(path=os.path.join('.', "project.psx"))
+    doc.read_only = False
 
     chunk = doc.addChunk()
     chunk.addPhotos(get_photos(args.image_dir))
