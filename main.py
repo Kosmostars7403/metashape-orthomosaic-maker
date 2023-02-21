@@ -4,6 +4,11 @@ import Metashape
 import argparse
 from glob import glob
 
+from progress_recorder import ProgressRecorder
+
+
+progress_recorder = ProgressRecorder(5)
+
 
 def get_photos(image_folder: str) -> list[str]:
     return (
@@ -48,7 +53,7 @@ def export_results(chunk, args: argparse.Namespace) -> None:
 
 def get_progress_of(process: str):
     def get_progress_status(progress: float):
-        print(f'{process} is {round(progress, 2)} complete')
+        progress_recorder.save_progress(process, progress)
 
     return get_progress_status
 
