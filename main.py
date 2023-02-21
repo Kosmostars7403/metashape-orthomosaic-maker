@@ -7,9 +7,6 @@ from glob import glob
 from progress_recorder import ProgressRecorder
 
 
-progress_recorder = ProgressRecorder(5)
-
-
 def get_photos(image_folder: str) -> list[str]:
     return (
             glob(f'{image_folder}/*.jpg')
@@ -111,6 +108,7 @@ def set_parser() -> argparse.ArgumentParser:
     arg_parser.add_argument('--export_model', type=bool, help='Export model', default=False)
     arg_parser.add_argument('--export_point_cloud', type=bool, help='Export point cloud', default=False)
     arg_parser.add_argument('--export_dem', type=bool, help='Export DEM', default=False)
+    arg_parser.add_argument('--flight_id', type=str, help='Flight ID at MongoDB', default=None)
 
     return arg_parser
 
@@ -118,4 +116,7 @@ def set_parser() -> argparse.ArgumentParser:
 if __name__ == '__main__':
     parser = set_parser()
     args = parser.parse_args()
+
+    progress_recorder = ProgressRecorder(5, args.flight_id)
+
     main(args)
