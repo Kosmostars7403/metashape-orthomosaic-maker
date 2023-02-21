@@ -42,7 +42,15 @@ def export_results(chunk, args: argparse.Namespace) -> None:
             chunk.exportRaster(args.output_dir + '/orthomosaic.tif', source_data=Metashape.OrthomosaicData,
                                image_compression=compression)
         else:
-            chunk.exportRaster(args.output_dir + '/orthomosaic.tif', source_data=Metashape.OrthomosaicData)
+            chunk.exportRaster(args.output_dir + '/orthomosaic.tif', source_data=Metashape.OrthomosaicData,
+                               progress=get_progress_of('Building raster'))
+
+
+def get_progress_of(process: str):
+    def get_progress_status(progress: float):
+        print(f'{process} is {round(progress, 2)} complete')
+
+    return get_progress_status
 
 
 def main(args: argparse.Namespace) -> None:
@@ -55,31 +63,34 @@ def main(args: argparse.Namespace) -> None:
 
     log_actions_and_save(f'{len(chunk.cameras)} images imported, start matching them!', doc)
 
-    chunk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False, keypoint_limit=40000, tiepoint_limit=10000)
+    chunk.matchPhotos(downscale=1, generic_preselection=True, reference_preselection=False, keypoint_limit=40000,
+                      tiepoint_limit=10000, progress=get_progress_of('Matching photos'))
 
     log_actions_and_save(f'Start aligning photos', doc)
-    chunk.alignCameras(adaptive_fitting=True)
+    chunk.alignCameras(adaptive_fitting=True, progress=get_progress_of('Aligning cameras'))
 
     log_actions_and_save(f'Start building depth map', doc)
-    chunk.buildDepthMaps(downscale=4, filter_mode=Metashape.MildFiltering)
+    chunk.buildDepthMaps(downscale=4, filter_mode=Metashape.MildFiltering,
+                         progress=get_progress_of('Building depth map'))
 
     log_actions_and_save(f'Start building model', doc)
-    chunk.buildModel(source_data=Metashape.DepthMapsData)
+    chunk.buildModel(source_data=Metashape.DepthMapsData, progress=get_progress_of('Building model'))
 
-    log_actions_and_save(f'Start building UV', doc)
-    chunk.buildUV(page_count=2, texture_size=4096)
+    if args.export_model:
+        log_actions_and_save(f'Start building UV', doc)
+        chunk.buildUV(page_count=2, texture_size=4096, progress=get_progress_of('Building UV'))
 
-    log_actions_and_save(f'Start building textures', doc)
-    chunk.buildTexture(texture_size=4096, ghosting_filter=True)
+        log_actions_and_save(f'Start building textures', doc)
+        chunk.buildTexture(texture_size=4096, ghosting_filter=True, progress=get_progress_of('Building textures'))
 
     log_actions_and_save(f'Start building point cloud', doc)
     chunk.buildPointCloud()
 
     log_actions_and_save(f'Start building digital elevation model', doc)
-    chunk.buildDem(source_data=Metashape.PointCloudData)
+    chunk.buildDem(source_data=Metashape.PointCloudData, progress=get_progress_of('Building DEM'))
 
     log_actions_and_save(f'Start building orthomosaic', doc)
-    chunk.buildOrthomosaic()
+    chunk.buildOrthomosaic(progress=get_progress_of('Building orthomosaic'))
 
     log_actions_and_save(f'Start exporting', doc)
     export_results(chunk, args)
@@ -90,10 +101,10 @@ def set_parser() -> argparse.ArgumentParser:
     arg_parser.add_argument('--image_dir', type=str, help='Directory with input images.', default='images')
     arg_parser.add_argument('--output_dir', type=str, help='Directory with input images.', default='results')
     arg_parser.add_argument('--small_file', type=bool, help='Compress highly', default=False)
-    arg_parser.add_argument('--export_orto', type=bool, help='Export orthomosaic', default=True),
-    arg_parser.add_argument('--export_report', type=bool, help='Export general report', default=True),
-    arg_parser.add_argument('--export_model', type=bool, help='Export model', default=False),
-    arg_parser.add_argument('--export_point_cloud', type=bool, help='Export point cloud', default=False),
+    arg_parser.add_argument('--export_orto', type=bool, help='Export orthomosaic', default=True)
+    arg_parser.add_argument('--export_report', type=bool, help='Export general report', default=False)
+    arg_parser.add_argument('--export_model', type=bool, help='Export model', default=False)
+    arg_parser.add_argument('--export_point_cloud', type=bool, help='Export point cloud', default=False)
     arg_parser.add_argument('--export_dem', type=bool, help='Export DEM', default=False)
 
     return arg_parser
