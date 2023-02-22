@@ -47,6 +47,8 @@ def export_results(chunk, args: argparse.Namespace) -> None:
             chunk.exportRaster(args.output_dir + '/orthomosaic.tif', source_data=Metashape.OrthomosaicData,
                                progress=get_progress_of('Building raster'))
 
+    progress_recorder.finish_pipeline()
+
 
 def get_progress_of(process: str):
     def get_progress_status(progress: float):

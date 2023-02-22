@@ -10,9 +10,12 @@ consumer = KafkaConsumer(
 )
 
 for msg in consumer:
+    print(msg.value['image_folder'])
     subprocess.Popen([
         'python3',
         'main.py',
         '--flight_id',
-        msg.value['id']
+        msg.value['id'],
+        '--image_dir',
+        msg.value['image_folder']
     ])

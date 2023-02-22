@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 
 class ProgressRecorder:
     def __init__(self, debounce_percent_delta, flight_id):
-        self.progress_state = {}
+        self.progress_state = {'status': 'PROCESSING'}
         self.debounce_percent_delta = debounce_percent_delta
         self.flight_id = flight_id
         self.previous_saved_progress = 0.0
@@ -24,6 +24,11 @@ class ProgressRecorder:
         if self.check_progress_for_save_in_db(progress):
             self.save_to_db()
             self.previous_saved_progress = progress
+
+    def finish_pipeline(self):
+        self.progress_state[self.current_process] = 100.00
+        self.progress_state['status'] = 'COMPLETE'
+        self.save_to_db()
 
     def check_progress_for_save_in_db(self, progress: float) -> bool:
         return progress - self.previous_saved_progress > self.debounce_percent_delta
